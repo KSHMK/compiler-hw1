@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include "data_set.h"
 #include "parse.h"
 
 int main(int argc, char* argv[])
@@ -13,6 +14,9 @@ int main(int argc, char* argv[])
     unsigned char* data;
     size_t data_size, mem_size;
     struct stat sb;
+    PTOKEN_R token_list = NULL;
+    PTABLE_R symbol_table = NULL, string_table = NULL;
+    
     if(argc == 1) 
     {
         printf("Usage: %s <File>\n",argv[0]);
@@ -40,11 +44,38 @@ int main(int argc, char* argv[])
         printf("mmap failed\n");
         goto _END;
     }
-    //result = parse_file(fp,);
+
+    token_list = token_init();
+    symbol_table = table_init();
+    string_table = table_init();
+    if(!symbol_table || !string_table)
+    {
+        printf("table init failed\n");
+        goto _END;
+    }
+    result = parse_file(data, data_size, token_list, symbol_table, string_table);
+
+    if(result < 0)
+    {
+        printf("parser failed\n");
+        goto _END;
+    }
+
+    printf("Token List\n");
+    token_print(token_list);
+    printf("Symbol Table\n");
+    table_print(symbol_table);
+    printf("String Table\n");
+    table_print(string_table);
 
 _END:
     if(fd)
         close(fd);
-
+    if(token_list)
+        token_free(token_list);
+    if(symbol_table)
+        table_free(symbol_table);
+    if(string_table)
+        table_free(string_table);
     return 0;
 }

@@ -1,15 +1,8 @@
 #ifndef __PARSE_H__
 #define __PARSE_H__
 
-// data structure field
-typedef struct table {
-    int idx;
-    char* data;
-    unsigned int hash;
-    struct table *next;
-} TABLE;
 
 // function field
-//int parse_file(FILE* fp,)
+int parse_file(unsigned char* data, size_t data_size, PTOKEN_R token_list, PTABLE_R symbol_table, PTABLE_R string_table);
 
 #endif
