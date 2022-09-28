@@ -12,35 +12,35 @@ typedef struct token {
     struct token* next;
 } TOKEN, *PTOKEN;
 
-typedef struct token_r {
+typedef struct token_list {
     int num;
     struct token* next;
-} TOKEN_R, *PTOKEN_R;
+} TOKEN_LIST, *PTOKEN_LIST;
 
-typedef struct table {
+typedef struct unique {
     char* data;
     int data_size;
     unsigned int hash;
-    struct table *next;
-} TABLE, *PTABLE;
+    struct unique *next;
+} UNIQUE, *PUNIQUE;
 
-typedef struct table_root {
+typedef struct unique_list {
     int num;
-    struct table *next;
-} TABLE_R, *PTABLE_R;
+    struct unique *next;
+} UNIQUE_LIST, *PUNIQUE_LIST;
 
 
 
 // function field
-PTOKEN_R token_init(void);
-void token_free(PTOKEN_R token_r);
-void token_print(PTOKEN_R token_r);
+PTOKEN_LIST token_list_init(void);
+void token_list_free(PTOKEN_LIST token_list);
+void token_list_print(PTOKEN_LIST token_list);
 
-PTABLE_R table_init(void);
-void table_free(PTABLE_R table_r);
+PUNIQUE_LIST unique_list_init(void);
+void unique_list_free(PUNIQUE_LIST unique_list);
 
-int table_append(PTABLE_R table_r, char* data, int data_size, int limit_cmp);
-void table_print(PTABLE_R table_r);
+int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int limit_cmp);
+void unique_list_print(PUNIQUE_LIST unique_list);
 
 // crc32 hash function
 unsigned int CRC32(const char* data, int data_length);

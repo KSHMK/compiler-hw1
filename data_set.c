@@ -4,71 +4,71 @@
 #include <inttypes.h> // uint32_t, uint8_t
 #include "data_set.h"
 
-PTOKEN_R token_init(void)
+PTOKEN_LIST token_list_init(void)
 {
-    PTOKEN_R token_r;
-    token_r = (PTOKEN_R)malloc(sizeof(TOKEN_R));
-    if(!token_r)
+    PTOKEN_LIST token_list;
+    token_list = (PTOKEN_LIST)malloc(sizeof(TOKEN_LIST));
+    if(!token_list)
         return NULL;
 
-    token_r->num = 0;
-    token_r->next = NULL;
-    return token_r;
+    token_list->num = 0;
+    token_list->next = NULL;
+    return token_list;
 }
 
-void token_free(PTOKEN_R token_r)
+void token_list_free(PTOKEN_LIST token_list)
 {
     int i;
     PTOKEN cur, next;
-    cur = token_r->next;
-    for(i=0;i<token_r->num;i++)
+    cur = token_list->next;
+    for(i=0;i<token_list->num;i++)
     {
         next = cur->next;
         free(cur);
         cur = next;
     }
-    free(token_r);
+    free(token_list);
 }
 
-void token_print(PTOKEN_R token_r)
+void token_list_print(PTOKEN_LIST token_list)
 {
     int i;
 
 }
 
-PTABLE_R table_init(void)
+PUNIQUE_LIST unique_list_init(void)
 {
-    PTABLE_R table_r;
-    table_r = (PTABLE_R)malloc(sizeof(TABLE_R));
-    if(!table_r)
+    PUNIQUE_LIST unique_list;
+    unique_list = (PUNIQUE_LIST)malloc(sizeof(UNIQUE_LIST));
+    if(!unique_list)
         return NULL;
 
-    table_r->num = 0;
-    table_r->next = NULL;
-    return table_r;
+    unique_list->num = 0;
+    unique_list->next = NULL;
+    return unique_list;
 }
 
-void table_free(PTABLE_R table_r)
+void unique_list_free(PUNIQUE_LIST unique_list)
 {
     int i;
-    PTABLE cur, next;
-    cur = table_r->next;
-    for(i=0;i<table_r->num;i++)
+    PUNIQUE cur, next;
+    cur = unique_list->next;
+    for(i=0;i<unique_list->num;i++)
     {
         free(cur->data);
         next = cur->next;
         free(cur);
         cur = next;
     }
-    free(table_r);
+    free(unique_list);
 }
 
-int table_append(PTABLE_R table_r, char* data, int data_size, int limit_cmp)
+int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int limit_cmp)
 {
     // is data exist?
     int i, cmp_size, found;
     unsigned int hash;
-    PTABLE cur, new;
+    PUNIQUE cur, new;
     
     cmp_size = data_size;
     if(limit_cmp == 1 && cmp_size > 10)
@@ -76,8 +76,8 @@ int table_append(PTABLE_R table_r, char* data, int data_size, int limit_cmp)
     
     found = -1;
     hash = CRC32(data, cmp_size);
-    cur = table_r->next;
-    for(i=0;i<table_r->num;i++, cur=cur->next)
+    cur = unique_list->next;
+    for(i=0;i<unique_list->num;i++, cur=cur->next)
     {
         if(hash == cur->hash && cmp_size <= cur->data_size && !memcmp(cur->data, data, cmp_size))
         {
@@ -88,7 +88,7 @@ int table_append(PTABLE_R table_r, char* data, int data_size, int limit_cmp)
     if(found != -1)
         return found;
     
-    new = (PTABLE)malloc(sizeof(TABLE));
+    new = (PUNIQUE)malloc(sizeof(UNIQUE));
     if(new == NULL)
         return -1;
     
@@ -96,27 +96,27 @@ int table_append(PTABLE_R table_r, char* data, int data_size, int limit_cmp)
     memcpy(new->data,data,data_size);
     new->hash = hash;
     new->next = NULL;
-    table_r->num++;
+    unique_list->num++;
 
-    if(table_r->next == NULL)
-        table_r->next = new;
+    if(unique_list->next == NULL)
+        unique_list->next = new;
     else
     {
-        cur = table_r->next;
+        cur = unique_list->next;
         while(cur->next != NULL)
             cur = cur->next;
         cur->next = new;
     }
     
-    return table_r->num - 1;
+    return unique_list->num - 1;
 }
 
-void table_print(PTABLE_R table_r)
+void unique_list_print(PUNIQUE_LIST unique_list)
 {
     int i;
-    PTABLE cur;
-    cur = table_r->next;
-    for(i=0;i<table_r->num;i++, cur=cur->next)
+    PUNIQUE cur;
+    cur = unique_list->next;
+    for(i=0;i<unique_list->num;i++, cur=cur->next)
         printf("%4d\t%s\n", i, cur->data);
 }
 

@@ -14,8 +14,8 @@ int main(int argc, char* argv[])
     unsigned char* data;
     size_t data_size, mem_size;
     struct stat sb;
-    PTOKEN_R token_list = NULL;
-    PTABLE_R symbol_table = NULL, string_table = NULL;
+    PTOKEN_LIST token_list = NULL;
+    PUNIQUE_LIST symbol_list = NULL, string_list = NULL;
     
     if(argc == 1) 
     {
@@ -45,15 +45,15 @@ int main(int argc, char* argv[])
         goto _END;
     }
 
-    token_list = token_init();
-    symbol_table = table_init();
-    string_table = table_init();
-    if(!symbol_table || !string_table)
+    token_list = token_list_init();
+    symbol_list = unique_list_init();
+    string_list = unique_list_init();
+    if(!symbol_list || !string_list)
     {
-        printf("table init failed\n");
+        printf("list init failed\n");
         goto _END;
     }
-    result = parse_file(data, data_size, token_list, symbol_table, string_table);
+    result = parse_data(data, data_size, token_list, symbol_list, string_list);
 
     if(result < 0)
     {
@@ -62,20 +62,20 @@ int main(int argc, char* argv[])
     }
 
     printf("Token List\n");
-    token_print(token_list);
+    token_list_print(token_list);
     printf("Symbol Table\n");
-    table_print(symbol_table);
+    unique_list_print(symbol_list);
     printf("String Table\n");
-    table_print(string_table);
+    unique_list_print(string_list);
 
 _END:
     if(fd)
         close(fd);
     if(token_list)
-        token_free(token_list);
-    if(symbol_table)
-        table_free(symbol_table);
-    if(string_table)
-        table_free(string_table);
+        token_list_free(token_list);
+    if(symbol_list)
+        unique_list_free(symbol_list);
+    if(string_list)
+        unique_list_free(string_list);
     return 0;
 }
