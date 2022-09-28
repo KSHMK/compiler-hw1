@@ -12,21 +12,20 @@ PTOKEN_LIST token_list_init(void)
         return NULL;
 
     token_list->num = 0;
-    token_list->next = NULL;
+    token_list->size = 0x10;
+    token_list->list = (PTOKEN*)malloc(sizeof(PTOKEN)*token_list->size);
+    if(!token_list->list)
+        return NULL;
+
     return token_list;
 }
 
 void token_list_free(PTOKEN_LIST token_list)
 {
     int i;
-    PTOKEN cur, next;
-    cur = token_list->next;
     for(i=0;i<token_list->num;i++)
-    {
-        next = cur->next;
-        free(cur);
-        cur = next;
-    }
+        free(token_list->list[i]);
+    free(token_list->list);
     free(token_list);
 }
 
@@ -44,22 +43,23 @@ PUNIQUE_LIST unique_list_init(void)
         return NULL;
 
     unique_list->num = 0;
-    unique_list->next = NULL;
+    unique_list->size = 0x10;
+    unique_list->list = (PUNIQUE*)malloc(sizeof(PUNIQUE)*unique_list->size);
+    if(!unique_list->list)
+        return NULL;
+
     return unique_list;
 }
 
 void unique_list_free(PUNIQUE_LIST unique_list)
 {
     int i;
-    PUNIQUE cur, next;
-    cur = unique_list->next;
     for(i=0;i<unique_list->num;i++)
     {
-        free(cur->data);
-        next = cur->next;
-        free(cur);
-        cur = next;
+        free(unique_list->list[i]->data);
+        free(unique_list->list[i]);
     }
+    free(unique_list->list);
     free(unique_list);
 }
 
@@ -76,9 +76,9 @@ int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int 
     
     found = -1;
     hash = CRC32(data, cmp_size);
-    cur = unique_list->next;
-    for(i=0;i<unique_list->num;i++, cur=cur->next)
+    for(i=0;i<unique_list->num;i++)
     {
+        cur = unique_list->list[i];
         if(hash == cur->hash && cmp_size <= cur->data_size && !memcmp(cur->data, data, cmp_size))
         {
             found = i;
@@ -89,24 +89,26 @@ int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int 
         return found;
     
     new = (PUNIQUE)malloc(sizeof(UNIQUE));
-    if(new == NULL)
+    if(!new)
         return -1;
-    
+
     new->data = (char*)malloc(data_size);
+    if(!new->data)
+        return -1;
+
     memcpy(new->data,data,data_size);
     new->hash = hash;
-    new->next = NULL;
-    unique_list->num++;
 
-    if(unique_list->next == NULL)
-        unique_list->next = new;
-    else
+    if(unique_list->num + 1 == unique_list->size)
     {
-        cur = unique_list->next;
-        while(cur->next != NULL)
-            cur = cur->next;
-        cur->next = new;
+        unique_list->size *= 2;
+        unique_list->list = (PUNIQUE*)realloc(unique_list->list, sizeof(PUNIQUE*)*unique_list->size);
+        if(!unique_list->list)
+            return -1;
     }
+    
+    unique_list->list[unique_list->num] = new;
+    unique_list->num++;
     
     return unique_list->num - 1;
 }
@@ -114,10 +116,8 @@ int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int 
 void unique_list_print(PUNIQUE_LIST unique_list)
 {
     int i;
-    PUNIQUE cur;
-    cur = unique_list->next;
-    for(i=0;i<unique_list->num;i++, cur=cur->next)
-        printf("%4d\t%s\n", i, cur->data);
+    for(i=0;i<unique_list->num;i++)
+        printf("%4d\t%s\n", i, unique_list->list[i]->data);
 }
 
 // source: https://github.com/gcc-mirror/gcc/blob/master/libiberty/crc32.c

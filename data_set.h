@@ -9,24 +9,24 @@ typedef struct token {
         int i;
         double f;
     } value;
-    struct token* next;
 } TOKEN, *PTOKEN;
 
 typedef struct token_list {
     int num;
-    struct token* next;
+    int size;
+    struct token** list;
 } TOKEN_LIST, *PTOKEN_LIST;
 
 typedef struct unique {
     char* data;
     int data_size;
     unsigned int hash;
-    struct unique *next;
 } UNIQUE, *PUNIQUE;
 
 typedef struct unique_list {
     int num;
-    struct unique *next;
+    int size;
+    struct unique **list;
 } UNIQUE_LIST, *PUNIQUE_LIST;
 
 
