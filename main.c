@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     size_t data_size, mem_size;
     struct stat sb;
     PTOKEN_LIST token_list = NULL;
-    PUNIQUE_LIST symbol_list = NULL, string_list = NULL;
+    PUNIQUE_LIST symbol_list = NULL, string_list = NULL, etc_list = NULL;
     
     if(argc == 1) 
     {
@@ -48,12 +48,13 @@ int main(int argc, char* argv[])
     token_list = token_list_init();
     symbol_list = unique_list_init();
     string_list = unique_list_init();
-    if(!symbol_list || !string_list)
+    etc_list = unique_list_init();
+    if(!symbol_list || !string_list || !etc_list)
     {
         printf("list init failed\n");
         goto _END;
     }
-    result = parse_data(data, data_size, token_list, symbol_list, string_list);
+    result = parse_data(data, data_size, token_list, symbol_list, string_list, etc_list);
 
     if(result < 0)
     {
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
     }
 
     printf("Token List\n");
-    token_list_print(token_list);
+    token_list_print(token_list, symbol_list, string_list, etc_list);
     printf("Symbol Table\n");
     unique_list_print(symbol_list);
     printf("String Table\n");
@@ -77,5 +78,7 @@ _END:
         unique_list_free(symbol_list);
     if(string_list)
         unique_list_free(string_list);
+    if(etc_list)
+        unique_list_free(etc_list);
     return 0;
 }
