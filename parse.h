@@ -3,22 +3,6 @@
 
 
 
-typedef int (*CHECK_FP)(char);
-
-
-// struct field
-typedef struct automata {
-    int is_end;
-    int list_len;
-    CHECK_FP *check_list;
-    struct automata **next_list;
-} AUTOMATA, *PAUTOMATA;
-
-
-typedef struct regex {
-    int token;
-    struct automata* start;
-} REGEX, *PREGEX;
 
 void token_init();
 void token_parse();

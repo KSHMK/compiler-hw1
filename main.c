@@ -49,11 +49,7 @@ int main(int argc, char* argv[])
     symbol_list = unique_list_init();
     string_list = unique_list_init();
     etc_list = unique_list_init();
-    if(!symbol_list || !string_list || !etc_list)
-    {
-        printf("list init failed\n");
-        goto _END;
-    }
+
     result = parse_data(data, data_size, token_list, symbol_list, string_list, etc_list);
 
     if(result < 0)

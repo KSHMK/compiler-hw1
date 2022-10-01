@@ -1,10 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "data_set.h"
 #include "parse.h"
+#include "utils.h"
+#include "lex.h"
+
+
 
 void parse_init()
 {
+    PREGEX_LIST regex_list;
+
+    regex_list = regex_list_init();
     
+
 }
 
 int automata_check(char* data, size_t data_size, PREGEX regex, size_t* data_checked_len)
@@ -41,6 +50,11 @@ int parse_data(unsigned char* data,
                 PUNIQUE_LIST string_list,
                 PUNIQUE_LIST etc_list)
 {
+    size_t data_i, data_checked_len;
+    while(data_i < data_size)
+    {
+
+    }
     return 0;
 }
 
