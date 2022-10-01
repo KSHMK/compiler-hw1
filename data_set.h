@@ -22,7 +22,7 @@ typedef enum token_type {
 } TOKEN_TYPE;
 
 typedef struct pre_token {
-    TOKEN_TYPE token_candidate;
+    TOKEN_TYPE candidate_type;
     int can_neighber;
     int data_sp, data_ep;
     struct pre_token* next;
@@ -82,8 +82,9 @@ typedef struct regex_list {
 // token list
 PPRE_TOKEN pre_token_init(TOKEN_TYPE token_type, int sp, int ep, int can_neighbor);
 void pre_token_free_all(PPRE_TOKEN pre_token);
+PTOKEN token_init(TOKEN_TYPE token_type, int id);
 PTOKEN_LIST token_list_init(void);
-void token_list_append(PTOKEN_LIST token_list);
+void token_list_append(PTOKEN_LIST token_list, TOKEN_TYPE token_type, int id);
 void token_list_free(PTOKEN_LIST token_list);
 void token_list_print(PTOKEN_LIST token_list, 
                         PUNIQUE_LIST symbol_list, 

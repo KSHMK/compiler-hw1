@@ -32,7 +32,7 @@ PPRE_TOKEN pre_token_init(TOKEN_TYPE token_type, int sp, int ep, int can_neighbo
     if(!pre_token)
         ERROR("malloc failed");
 
-    pre_token->token_candidate = token_type;
+    pre_token->candidate_type = token_type;
     pre_token->can_neighber = can_neighbor;
     pre_token->next = NULL;
     pre_token->data_sp = sp;
@@ -53,6 +53,18 @@ void pre_token_free_all(PPRE_TOKEN pre_token)
 
 }
 
+PTOKEN token_init(TOKEN_TYPE token_type, int id)
+{
+    PTOKEN token;
+    token = (PTOKEN)malloc(sizeof(TOKEN));
+    if(!token)
+        ERROR("malloc failed");
+
+    token->type = token_type;
+    token->id = id;
+    return token;
+}
+
 PTOKEN_LIST token_list_init(void)
 {
     PTOKEN_LIST token_list;
@@ -69,6 +81,24 @@ PTOKEN_LIST token_list_init(void)
     return token_list;
 }
 
+void token_list_append(PTOKEN_LIST token_list, TOKEN_TYPE token_type, int id)
+{
+    PTOKEN token;
+    
+    token = token_init(token_type, id);
+
+    if(token_list->len == token_list->size)
+    {
+        token_list->size *= 2;
+        token_list->list = (PTOKEN*)realloc(token_list->list, sizeof(PTOKEN)*token_list->size);
+        if(!token_list->list)
+            ERROR("realloc failed");
+    }
+    
+    token_list->list[token_list->len] = token;
+    token_list->len++;
+}
+
 void token_list_free(PTOKEN_LIST token_list)
 {
     int i;
@@ -83,11 +113,14 @@ void token_list_print(PTOKEN_LIST token_list,
                         PUNIQUE_LIST string_list,
                         PUNIQUE_LIST etc_list)
 {
-    int i, id;
+    int i, j, id;
     int need_print;
     char* value;
+    int value_len;
+    int line;
     PTOKEN cur;
     
+    line = 1;
     for(i=0;i<token_list->len;i++)
     {
         need_print = 1;
@@ -100,10 +133,13 @@ void token_list_print(PTOKEN_LIST token_list,
         case TOKEN_TYPE_ID:
             id = cur->id;
             value = symbol_list->list[cur->id]->data;
+            value_len = symbol_list->list[cur->id]->data_size;
             break;
         case TOKEN_TYPE_STRING:
             id = cur->id;
             value = string_list->list[cur->id]->data;
+            value_len = string_list->list[cur->id]->data_size;
+            break;
         case TOKEN_TYPE_NUM:
         case TOKEN_TYPE_REAL:
         case TOKEN_TYPE_PLUS:
@@ -114,11 +150,23 @@ void token_list_print(PTOKEN_LIST token_list,
         case TOKEN_TYPE_COLON:
         case TOKEN_TYPE_SEMICOLON:
             value = etc_list->list[cur->id]->data;
+            value_len = etc_list->list[cur->id]->data_size;
             break;
         case TOKEN_TYPE_SPACE:
         case TOKEN_TYPE_TAB:
+            need_print = 0;
+            break;
         case TOKEN_TYPE_ENTER:
+            need_print = 0;
+            line++;
+            break;
         case TOKEN_TYPE_ERROR:
+            need_print = 0;
+            printf("Error: line %d\t", line);
+            for(j=0;j<etc_list->list[cur->id]->data_size;j++)
+                printf("%c", etc_list->list[cur->id]->data[j]);
+            printf("\n");
+            break;
         default:
             need_print = 0;
             break;
@@ -128,7 +176,10 @@ void token_list_print(PTOKEN_LIST token_list,
             printf("<%s, ", TOKEN_NAME[token_list->list[i]->type]);
             if(id != -1)
                 printf("%d", id);
-            printf(">\t%s\n", value);
+            printf(">\t");
+            for(j=0;j<value_len;j++)
+                printf("%c", value[j]);
+            printf("\n");
         }
     }
 
@@ -200,6 +251,7 @@ int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int 
 
     memcpy(new->data,data,data_size);
     new->hash = hash;
+    new->data_size = data_size;
 
     if(unique_list->len == unique_list->size)
     {
@@ -217,9 +269,15 @@ int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int 
 
 void unique_list_print(PUNIQUE_LIST unique_list)
 {
-    int i;
+    int i, j;
     for(i=0;i<unique_list->len;i++)
-        printf("%4d\t%s\n", i, unique_list->list[i]->data);
+    {
+        printf("%4d\t",i);
+        for(j=0;j<unique_list->list[i]->data_size;j++)
+            printf("%c", unique_list->list[i]->data[j]);
+        printf("\n");
+    }
+        
 }
 
 // ==================================

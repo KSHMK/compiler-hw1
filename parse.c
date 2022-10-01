@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "data_set.h"
 #include "parse.h"
 #include "utils.h"
@@ -192,7 +193,7 @@ PPRE_TOKEN parse_data_prev(unsigned char* data, size_t data_size)
             continue;
         }
 
-        pre_token_pre->token_candidate = TOKEN_TYPE_ERROR;
+        pre_token_pre->candidate_type = TOKEN_TYPE_ERROR;
         pre_token_pre->data_ep = pre_token_cur->data_ep;
         pre_token_pre->next = pre_token_cur->next;
         pre_token_pre->can_neighber = 0;
@@ -211,10 +212,11 @@ int parse_data(unsigned char* data,
                 PUNIQUE_LIST etc_list)
 {
     PPRE_TOKEN pre_token_sp,pre_token_cur;
-    int i;
+    int i, data_slice_len, id;
+    char* data_slice;
     pre_token_sp = parse_data_prev(data, data_size);
 
-    pre_token_cur = pre_token_sp;
+    
     char* TOKEN_NAME[]= {
         "ID",      
         "REAL",  
@@ -232,14 +234,43 @@ int parse_data(unsigned char* data,
         "ENTER",
         "ERROR",
     };
+    pre_token_cur = pre_token_sp;
     while(pre_token_cur != NULL)
     {
-        printf("%10s %d %3d %3d ",TOKEN_NAME[pre_token_cur->token_candidate],pre_token_cur->can_neighber,pre_token_cur->data_sp,pre_token_cur->data_ep);
+        printf("%10s %d %3d %3d ",TOKEN_NAME[pre_token_cur->candidate_type],pre_token_cur->can_neighber,pre_token_cur->data_sp,pre_token_cur->data_ep);
         for(i=pre_token_cur->data_sp;i<pre_token_cur->data_ep;i++)
             printf("%c",data[i]);
         printf("\n");
         pre_token_cur = pre_token_cur->next;
     }
+
+    pre_token_cur = pre_token_sp->next;
+    while(pre_token_cur != NULL)
+    {
+        data_slice_len = pre_token_cur->data_ep - pre_token_cur->data_sp;
+        data_slice = (char*)malloc(sizeof(char)*(data_slice_len+1));
+        if(!data_slice)
+            ERROR("malloc failed");
+        memcpy(data_slice, &data[pre_token_cur->data_sp], data_slice_len);
+        data_slice[data_slice_len] = 0;
+
+        switch(pre_token_cur->candidate_type)
+        {
+        case TOKEN_TYPE_ID:
+            id = unique_list_append(symbol_list, data_slice, data_slice_len, 1);
+            break;
+        case TOKEN_TYPE_STRING:
+            id = unique_list_append(string_list, data_slice, data_slice_len, 0);
+            break;
+        default:
+            id = unique_list_append(etc_list, data_slice, data_slice_len, 0);
+            break;
+        }
+        token_list_append(token_list, pre_token_cur->candidate_type, id);
+        free(data_slice);
+        pre_token_cur = pre_token_cur->next;
+    }
+
     
 
 
