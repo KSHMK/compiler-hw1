@@ -19,5 +19,6 @@ int check_semicolon(char data);
 int check_space(char data);
 int check_tab(char data);
 int check_enter(char data);
+int check_nothing(char data);
 
 #endif

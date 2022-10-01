@@ -19,9 +19,11 @@ int main(int argc, char* argv[])
     
     if(argc == 1) 
     {
-        printf("Usage: %s <File>\n",argv[0]);
-        goto _END;
+        //printf("Usage: %s <File>\n",argv[0]);
+        //return 0;
+        argv[1] = "/home/user/compiler/compiler-hw1/example/ex1.txt";
     }
+    
     
     fd = open(argv[1], O_RDONLY);
     if(fd == -1)

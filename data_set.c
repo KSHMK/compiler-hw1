@@ -9,8 +9,8 @@
 
 char* TOKEN_NAME[]= {
         "ID",      
-        "NUM",   
         "REAL",  
+        "NUM",   
         "STRING",
         "PLUS",  
         "MINUS", 
@@ -24,6 +24,34 @@ char* TOKEN_NAME[]= {
         "ENTER",
         "ERROR",
     };
+
+PPRE_TOKEN pre_token_init(TOKEN_TYPE token_type, int sp, int ep, int can_neighbor)
+{
+    PPRE_TOKEN pre_token;
+    pre_token = (PPRE_TOKEN)malloc(sizeof(PRE_TOKEN));
+    if(!pre_token)
+        ERROR("malloc failed");
+
+    pre_token->token_candidate = token_type;
+    pre_token->can_neighber = can_neighbor;
+    pre_token->next = NULL;
+    pre_token->data_sp = sp;
+    pre_token->data_ep = ep;
+    return pre_token;
+}
+
+void pre_token_free_all(PPRE_TOKEN pre_token)
+{
+    PPRE_TOKEN cur, next;
+    cur = pre_token;
+    while(cur != NULL)
+    {
+        next = cur->next;
+        free(cur);
+        cur = next;
+    }
+
+}
 
 PTOKEN_LIST token_list_init(void)
 {
@@ -173,10 +201,10 @@ int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int 
     memcpy(new->data,data,data_size);
     new->hash = hash;
 
-    if(unique_list->len + 1 == unique_list->size)
+    if(unique_list->len == unique_list->size)
     {
         unique_list->size *= 2;
-        unique_list->list = (PUNIQUE*)realloc(unique_list->list, sizeof(PUNIQUE*)*unique_list->size);
+        unique_list->list = (PUNIQUE*)realloc(unique_list->list, sizeof(PUNIQUE)*unique_list->size);
         if(!unique_list->list)
             ERROR("realloc failed");
     }
@@ -196,7 +224,86 @@ void unique_list_print(PUNIQUE_LIST unique_list)
 
 // ==================================
 // regex function
-PREGEX regex_init(void)
+
+PAUTOMATA automata_init(int is_end)
+{
+    PAUTOMATA automata;
+    automata = (PAUTOMATA)malloc(sizeof(AUTOMATA));
+    if(!automata)
+        ERROR("malloc failed");
+    
+    automata->is_end = is_end;
+    automata->len = 0;
+    automata->size = 0x10;
+    automata->check_list = (CHECK_FP*)malloc(sizeof(CHECK_FP)*automata->size);
+    if(!automata->check_list)
+        ERROR("malloc failed");
+    automata->next_list = (PAUTOMATA*)malloc(sizeof(PAUTOMATA)*automata->size);
+    if(!automata->next_list)
+        ERROR("malloc failed");
+
+    return automata;
+}
+
+void automata_connect_node_to_node(PAUTOMATA from, PAUTOMATA to, CHECK_FP check_func)
+{
+    if(from->len == from->size)
+    {
+        from->size *= 2;
+        from->check_list = (CHECK_FP*)realloc(from->check_list, sizeof(CHECK_FP)*from->size);
+        if(!from->check_list)
+            ERROR("realloc failed");
+            
+        from->next_list = (PAUTOMATA*)realloc(from->next_list, sizeof(PAUTOMATA)*from->size);
+        if(!from->next_list)
+            ERROR("realloc failed");
+    }
+
+    from->check_list[from->len] = check_func;
+    from->next_list[from->len] = to;
+    from->len++;
+}
+
+void regex_automata_connection(PREGEX regex, int from_idx, int to_idx, CHECK_FP check_func)
+{
+    PAUTOMATA from = NULL, to = NULL;
+
+    // start node handle
+    if(from_idx == -1 && regex->len == to_idx)
+    {
+        to = automata_init(0);
+        regex_append(regex, to);
+        regex->start = to;
+        return;
+    }
+
+    // end node handle
+    if(to_idx == -1 && regex->len > from_idx)
+    {
+        from = regex->list[from_idx];
+        from->is_end = 1;
+        return;
+    }
+
+    // other handle
+    if(regex->len > from_idx && regex->len >= to_idx)
+    {
+        from = regex->list[from_idx];
+        if(regex->len == to_idx)
+        {
+            to = automata_init(0);
+            regex_append(regex, to);
+        }
+        to = regex->list[to_idx];
+        automata_connect_node_to_node(from, to, check_func);
+        return;
+    }
+   
+    ERROR("Wrong Index");
+    return;
+}
+
+PREGEX regex_init(TOKEN_TYPE token_type, int can_neighbor)
 {
     PREGEX regex;
     regex = (PREGEX)malloc(sizeof(REGEX));
@@ -204,9 +311,62 @@ PREGEX regex_init(void)
         ERROR("malloc failed");
     
     regex->start = NULL;
-    regex->token_type = TOKEN_TYPE_ERROR;
+    regex->token_type = token_type;
+    regex->can_neighbor = can_neighbor;
+
+    regex->len = 0;
+    regex->size = 0x10;
+    regex->list = (PAUTOMATA*)malloc(sizeof(PAUTOMATA)*regex->size);
+    if(!regex->list)
+        ERROR("malloc failed");
+
     return regex;
 }
+
+void regex_append(PREGEX regex, PAUTOMATA automata)
+{
+    if(regex->len == regex->size)
+    {
+        regex->size *= 2;
+        regex->list = (PAUTOMATA*)realloc(regex->list, sizeof(PAUTOMATA)*regex->size);
+        if(!regex->list)
+            ERROR("realloc failed");
+    }
+    
+    regex->list[regex->len] = automata;
+    regex->len++;
+}
+
+int regex_check(PREGEX regex, char* data, size_t data_size, size_t* data_checked_len)
+{
+    int i;
+    size_t data_i;
+    PAUTOMATA cur_state, next_state;
+
+    cur_state = regex->start;
+    for(data_i=0;data_i<data_size;data_i++)
+    {
+        next_state = NULL;
+        for(i=0;i<cur_state->len;i++)
+        {
+            if(cur_state->check_list[i](data[data_i]))
+            {
+                next_state = cur_state->next_list[i];
+                break;
+            }
+        }
+        if(!next_state)
+            break;
+        cur_state = next_state;
+    }
+    if(cur_state->is_end)
+    {
+        *data_checked_len = data_i;
+        return 1;
+    }
+    return 0;
+}
+
 
 PREGEX_LIST regex_list_init(void)
 {
@@ -222,4 +382,40 @@ PREGEX_LIST regex_list_init(void)
         ERROR("malloc failed");
 
     return regex_list;
+}
+
+void regex_list_append(PREGEX_LIST regex_list, PREGEX regex)
+{
+    if(regex_list->len == regex_list->size)
+    {
+        regex_list->size *= 2;
+        regex_list->list = (PREGEX*)realloc(regex_list->list, sizeof(PREGEX)*regex_list->size);
+        if(!regex_list->list)
+            ERROR("realloc failed");
+    }
+
+    regex_list->list[regex_list->len] = regex;
+    regex_list->len++;
+
+}
+
+void regex_list_free_all(PREGEX_LIST regex_list)
+{
+    PREGEX regex;
+    PAUTOMATA automata;
+    int i, j;
+    for(i=0;i<regex_list->len;i++)
+    {
+        regex = regex_list->list[i];
+        for(j=0;j<regex->len;j++)
+        {
+            free(regex->list[j]->check_list);
+            free(regex->list[j]->next_list);
+            free(regex->list[j]);
+        }
+        free(regex->list);
+        free(regex);
+    }
+    free(regex_list->list);
+    free(regex_list);
 }

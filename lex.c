@@ -90,4 +90,7 @@ int check_enter(char data)
     return data == '\n';
 }
 
-
+int check_nothing(char data)
+{
+    return data != '\n';
+}
