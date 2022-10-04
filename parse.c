@@ -66,7 +66,7 @@ PREGEX_LIST parse_build_regex_list(void)
 
     
     //STRING
-    regex = regex_init(TOKEN_TYPE_STRING, 0);
+    regex = regex_init(TOKEN_TYPE_STRING, 1);
     regex_automata_connection(regex, -1, 0, NULL);
     regex_automata_connection(regex, 0, 1, check_double_quote);
     regex_automata_connection(regex, 1, 2, check_double_quote);
@@ -150,7 +150,7 @@ PREGEX_LIST parse_build_regex_list(void)
 
 PPRE_TOKEN parse_data_prev(unsigned char* data, size_t data_size)
 {
-    PPRE_TOKEN pre_token_sp,pre_token_cur,pre_token_pre;
+    PPRE_TOKEN pre_token_sp,pre_token_cur;
     PREGEX_LIST regex_list;
     size_t data_i, data_checked_len;
     int i;
@@ -181,42 +181,14 @@ PPRE_TOKEN parse_data_prev(unsigned char* data, size_t data_size)
         }
     }
 
-    // syntax checker
-    pre_token_pre = pre_token_sp;
-    pre_token_cur = pre_token_pre->next;
-    while(pre_token_cur != NULL)
-    {
-        if(pre_token_pre->can_neighber == 1 || pre_token_cur->can_neighber == 1)
-        {
-            pre_token_pre = pre_token_cur;
-            pre_token_cur = pre_token_cur->next;
-            continue;
-        }
-
-        pre_token_pre->candidate_type = TOKEN_TYPE_ERROR;
-        pre_token_pre->data_ep = pre_token_cur->data_ep;
-        pre_token_pre->next = pre_token_cur->next;
-        pre_token_pre->can_neighber = 0;
-        free(pre_token_cur);
-        pre_token_cur = pre_token_pre->next;
-    }
     regex_list_free_all(regex_list);
     return pre_token_sp;
 }
 
-int parse_data(unsigned char* data, 
-                size_t data_size, 
-                PTOKEN_LIST token_list, 
-                PUNIQUE_LIST symbol_list, 
-                PUNIQUE_LIST string_list,
-                PUNIQUE_LIST etc_list)
+void pre_parse_token_print(char* data, PPRE_TOKEN pre_token_sp)
 {
-    PPRE_TOKEN pre_token_sp,pre_token_cur;
-    int i, data_slice_len, id;
-    char* data_slice;
-    pre_token_sp = parse_data_prev(data, data_size);
-
-    
+    PPRE_TOKEN pre_token_cur;
+    int i;
     char* TOKEN_NAME[]= {
         "ID",      
         "REAL",  
@@ -243,7 +215,43 @@ int parse_data(unsigned char* data,
         printf("\n");
         pre_token_cur = pre_token_cur->next;
     }
+}
 
+int parse_data(unsigned char* data, 
+                size_t data_size, 
+                PTOKEN_LIST token_list, 
+                PUNIQUE_LIST symbol_list, 
+                PUNIQUE_LIST string_list,
+                PUNIQUE_LIST etc_list)
+{
+    PPRE_TOKEN pre_token_sp,pre_token_cur,pre_token_prev;
+    int i, data_slice_len, id;
+    char* data_slice;
+    pre_token_sp = parse_data_prev(data, data_size);
+
+    
+    // syntax checker
+    pre_token_prev = pre_token_sp;
+    pre_token_cur = pre_token_prev->next;
+    while(pre_token_cur != NULL)
+    {
+        if(pre_token_prev->can_neighber == 1 || pre_token_cur->can_neighber == 1)
+        {
+            pre_token_prev = pre_token_cur;
+            pre_token_cur = pre_token_cur->next;
+            continue;
+        }
+
+        pre_token_prev->candidate_type = TOKEN_TYPE_ERROR;
+        pre_token_prev->data_ep = pre_token_cur->data_ep;
+        pre_token_prev->next = pre_token_cur->next;
+        pre_token_prev->can_neighber = 0;
+        free(pre_token_cur);
+        pre_token_cur = pre_token_prev->next;
+    }
+
+    //pre_parse_token_print(data, pre_token_sp);
+    
     pre_token_cur = pre_token_sp->next;
     while(pre_token_cur != NULL)
     {

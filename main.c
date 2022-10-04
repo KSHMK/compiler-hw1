@@ -19,9 +19,8 @@ int main(int argc, char* argv[])
     
     if(argc == 1) 
     {
-        //printf("Usage: %s <File>\n",argv[0]);
-        //return 0;
-        argv[1] = "/home/user/compiler/compiler-hw1/example/ex1.txt";
+        printf("Usage: %s <File>\n",argv[0]);
+        return 0;
     }
     
     

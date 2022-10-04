@@ -1,11 +1,7 @@
 A123 = "this is test";
 asdfasdB12312341234 = 1.2421;
 T10 = A123:19-24 + asdfasdB12312341234 / 10;
-    f1  12  f2  2e
-1 123 149 00100
-asdf123asdf1324
-"asdf101"
-"asdf100120
-asdf asodifj 2903.123. 23"
+    f1  12  f2 f1
+1 123 149 
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 aaaaaaaaaaaaaaaaaaaaaaaaa

@@ -142,6 +142,7 @@ void token_list_print(PTOKEN_LIST token_list,
             break;
         case TOKEN_TYPE_NUM:
         case TOKEN_TYPE_REAL:
+            id = -2;
         case TOKEN_TYPE_PLUS:
         case TOKEN_TYPE_MINUS:
         case TOKEN_TYPE_MUL:
@@ -174,7 +175,12 @@ void token_list_print(PTOKEN_LIST token_list,
         if(need_print)
         {
             printf("<%s, ", TOKEN_NAME[token_list->list[i]->type]);
-            if(id != -1)
+            if(id == -2)
+            {
+                for(j=0;j<value_len;j++)
+                    printf("%c", value[j]);
+            }
+            else if(id != -1)
                 printf("%d", id);
             printf(">\t");
             for(j=0;j<value_len;j++)
@@ -218,21 +224,21 @@ void unique_list_free(PUNIQUE_LIST unique_list)
 
 int unique_list_append(PUNIQUE_LIST unique_list, char* data, int data_size, int limit_cmp)
 {
-    // is data exist?
-    int i, cmp_size, found;
+    
+    int i, found;
     unsigned int hash;
     PUNIQUE cur, new;
     
-    cmp_size = data_size;
-    if(limit_cmp == 1 && cmp_size > 10)
-        cmp_size = 10;
+    if(limit_cmp == 1 && data_size > 10)
+        data_size = 10;
     
     found = -1;
-    hash = CRC32(data, cmp_size);
+    hash = CRC32(data, data_size);
+    // is data exist?
     for(i=0;i<unique_list->len;i++)
     {
         cur = unique_list->list[i];
-        if(hash == cur->hash && cmp_size <= cur->data_size && !memcmp(cur->data, data, cmp_size))
+        if(hash == cur->hash && data_size <= cur->data_size && !memcmp(cur->data, data, data_size))
         {
             found = i;
             break;
@@ -322,7 +328,10 @@ void automata_connect_node_to_node(PAUTOMATA from, PAUTOMATA to, CHECK_FP check_
     from->len++;
 }
 
-void regex_automata_connection(PREGEX regex, int from_idx, int to_idx, CHECK_FP check_func)
+void regex_automata_connection(PREGEX regex, 
+                            int from_idx, 
+                            int to_idx, 
+                            CHECK_FP check_func)
 {
     PAUTOMATA from = NULL, to = NULL;
 
