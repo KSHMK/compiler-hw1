@@ -3,5 +3,6 @@ asdfasdB12312341234 = 1.2421;
 T10 = A123:19-24 + asdfasdB12312341234 / 10;
     f1  12  f2 f1
 1 123 149 
+"this ia \" string("
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 aaaaaaaaaaaaaaaaaaaaaaaaa

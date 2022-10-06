@@ -414,6 +414,8 @@ int regex_check(PREGEX regex, char* data, size_t data_size, size_t* data_checked
     for(data_i=0;data_i<data_size;data_i++)
     {
         next_state = NULL;
+        if(data[data_i] == '\\')
+            data_i+=2;
         for(i=0;i<cur_state->len;i++)
         {
             if(cur_state->check_list[i](data[data_i]))
