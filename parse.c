@@ -229,6 +229,7 @@ int parse_data(unsigned char* data,
     char* data_slice;
     pre_token_sp = parse_data_prev(data, data_size);
 
+    //pre_parse_token_print(data, pre_token_sp);
     
     // syntax checker
     pre_token_prev = pre_token_sp;
@@ -250,7 +251,7 @@ int parse_data(unsigned char* data,
         pre_token_cur = pre_token_prev->next;
     }
 
-    //pre_parse_token_print(data, pre_token_sp);
+    
     
     pre_token_cur = pre_token_sp->next;
     while(pre_token_cur != NULL)
